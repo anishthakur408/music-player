@@ -39,11 +39,24 @@ class PermissionHelper {
   static Future<bool> checkAndRequestPermission() async {
     // First check if we already have permission
     if (await hasStoragePermission()) {
+      await _requestNotificationPermissionIfNeeded();
       return true;
     }
 
     // If not, request permission
-    return await requestStoragePermission();
+    final granted = await requestStoragePermission();
+    if (granted) {
+      await _requestNotificationPermissionIfNeeded();
+    }
+    return granted;
+  }
+
+  static Future<void> _requestNotificationPermissionIfNeeded() async {
+    if (Platform.isAndroid && await _getAndroidVersion() >= 33) {
+      if (!await Permission.notification.isGranted) {
+        await Permission.notification.request();
+      }
+    }
   }
 
   /// Get permission status details

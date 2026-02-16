@@ -129,40 +129,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GlassButton(
-          width: 50,
-          height: 50,
-          padding: EdgeInsets.all(12),
-          onTap: () {
-            // Could implement drawer or back navigation
-          },
-          child: Icon(
-            Icons.menu_rounded,
-            color: AppColors.primary,
-            size: 24,
-          ),
-        ),
-        Text(
-          'Now Playing',
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        GlassButton(
-          width: 50,
-          height: 50,
-          padding: EdgeInsets.all(12),
-          onTap: () {
-            // Could implement settings or more options
-          },
-          child: Icon(
-            Icons.more_horiz_rounded,
-            color: AppColors.primary,
-            size: 24,
-          ),
-        ),
+
       ],
     );
   }
@@ -177,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             height: 120,
             padding: EdgeInsets.all(30),
             child: Icon(
-              Icons.music_off_rounded,
+              Icons.music_off_outlined,
               size: 60,
               color: AppColors.textMuted,
             ),
@@ -248,20 +215,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           // Circular player
           _buildCircularPlayer(),
 
-          SizedBox(height: 40),
 
-          // Progress and time
-          _buildProgressSection(),
-
-          SizedBox(height: 30),
-
-          // Control buttons
-          _buildControlButtons(),
-
-          SizedBox(height: 30),
 
           // Additional controls
-          _buildAdditionalControls(),
+
         ],
       ),
     );
@@ -327,32 +284,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
 
-        // Rotating disc
-        RotatingDiscWidget(
-          size: 200,
-          isRotating: _isPlaying,
-          backgroundColor: AppColors.primary,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'TONE',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                  letterSpacing: 1,
-                ),
-              ),
-              SizedBox(height: 4),
-              Container(
-                width: 30,
-                height: 2,
-                color: AppColors.primary.withOpacity(0.5),
-              ),
-            ],
-          ),
-        ),
+
 
         // Play button overlay (when paused)
         if (!_isPlaying)
@@ -396,138 +328,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
         ),
 
-        SizedBox(height: 10),
-
         // Progress slider
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 4,
-            thumbShape: RoundSliderThumbShape(enabledThumbRadius: 8),
-            overlayShape: RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: AppColors.primary,
-            inactiveTrackColor: AppColors.glassBackground,
-            thumbColor: AppColors.primary,
-          ),
-          child: Slider(
-            value: _currentProgress.clamp(0.0, 1.0),
-            onChanged: (value) {
-              final position = Duration(
-                milliseconds: (value * _totalDuration.inMilliseconds).round(),
-              );
-              widget.audioService.seek(position);
-            },
-          ),
-        ),
+
       ],
     );
-  }
-
-  Widget _buildControlButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Previous button
-        GlassButton(
-          width: 60,
-          height: 60,
-          padding: EdgeInsets.all(15),
-          onTap: () => widget.audioService.skipToPrevious(),
-          child: Icon(
-            Icons.skip_previous_rounded,
-            color: AppColors.primary,
-            size: 28,
-          ),
-        ),
-
-        SizedBox(width: 20),
-
-        // Play/Pause button
-        GlassButton(
-          width: 80,
-          height: 80,
-          padding: EdgeInsets.all(20),
-          onTap: () => widget.audioService.togglePlayPause(),
-          child: Icon(
-            _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-            color: AppColors.primary,
-            size: 36,
-          ),
-        ),
-
-        SizedBox(width: 20),
-
-        // Next button
-        GlassButton(
-          width: 60,
-          height: 60,
-          padding: EdgeInsets.all(15),
-          onTap: () => widget.audioService.skipToNext(),
-          child: Icon(
-            Icons.skip_next_rounded,
-            color: AppColors.primary,
-            size: 28,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAdditionalControls() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // Favorite button
-        GlassButton(
-          width: 50,
-          height: 50,
-          padding: EdgeInsets.all(12),
-          onTap: () {
-            // TODO: Implement favorite functionality
-          },
-          child: Icon(
-            Icons.favorite_rounded,
-            color: AppColors.red,
-            size: 24,
-          ),
-        ),
-
-        // Lyrics section
-        Column(
-          children: [
-            Text(
-              'Playing from Library',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary,
-              ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              '${widget.musicScanner.allSongs.length} songs available',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.textMuted,
-              ),
-            ),
-          ],
-        ),
-
-        // Shuffle button
-        GlassButton(
-          width: 50,
-          height: 50,
-          padding: EdgeInsets.all(12),
-          onTap: () => widget.audioService.toggleShuffle(),
-          child: Icon(
-            Icons.shuffle_rounded,
-            color: widget.audioService.isShuffleEnabled
-                ? AppColors.primary
-                : AppColors.textMuted,
-            size: 24,
-          ),
-        ),
-      ],
-    );
-  }
-}
+  }}

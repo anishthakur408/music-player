@@ -40,20 +40,17 @@ class GlassCard extends StatelessWidget {
         margin: margin,
         padding: padding ?? EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withOpacity(opacity),
+          color: backgroundColor ?? Colors.white,
           borderRadius: BorderRadius.circular(borderRadius),
-          border: border ?? Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: boxShadow ?? [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: blur,
-              spreadRadius: 0,
-              offset: Offset(0, 10),
-            ),
-          ],
+          border: border ?? Border.all(color: Colors.black12, width: 1),
+          boxShadow: boxShadow ??
+              const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
         ),
         child: child,
       ),
@@ -85,7 +82,8 @@ class GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(borderRadius),
       onTap: onTap,
       child: AnimatedContainer(
         duration: Duration(milliseconds: 100),
@@ -94,21 +92,10 @@ class GlassButton extends StatelessWidget {
         padding: padding ?? EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isPressed
-              ? Colors.white.withOpacity(0.4)
-              : backgroundColor ?? Colors.white.withOpacity(0.25),
+              ? Colors.grey.shade200
+              : (backgroundColor ?? Colors.white),
           borderRadius: BorderRadius.circular(borderRadius),
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(isPressed ? 0.05 : 0.1),
-              blurRadius: isPressed ? 10 : 20,
-              spreadRadius: 0,
-              offset: Offset(0, isPressed ? 5 : 10),
-            ),
-          ],
+          border: Border.all(color: Colors.black12, width: 1),
         ),
         child: child,
       ),
@@ -137,11 +124,7 @@ class GradientBackground extends StatelessWidget {
         gradient: LinearGradient(
           begin: begin,
           end: end,
-          colors: colors ?? [
-            Color(0xFFE3F2FD), // Light blue
-            Color(0xFFBBDEFB), // Medium blue
-            Color(0xFF90CAF9), // Darker blue
-          ],
+          colors: colors ?? [Color(0xFFF5F5F5), Color(0xFFF5F5F5)],
         ),
       ),
       child: child,
@@ -173,20 +156,17 @@ class CircularGlassContainer extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: backgroundColor ?? Colors.white.withOpacity(0.25),
+          color: backgroundColor ?? Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withOpacity(0.3),
-            width: 1,
-          ),
-          boxShadow: boxShadow ?? [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 20,
-              spreadRadius: 0,
-              offset: Offset(0, 10),
-            ),
-          ],
+          border: Border.all(color: Colors.black12, width: 1),
+          boxShadow: boxShadow ??
+              const [
+                BoxShadow(
+                  color: Color(0x14000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
         ),
         child: Center(child: child),
       ),

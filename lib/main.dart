@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'dart:async';
-// import 'dart:math' as math;
+import 'package:just_audio_background/just_audio_background.dart';
 
 import 'screens/splash_screen.dart';
-// import 'screens/main_screen.dart';
-// import 'screens/home_screen.dart';
-// import 'screens/library_screen.dart';
-
-// The following imports are not in the user provided main.dart but
-// they are necessary for the other files to work
-import 'widgets/glass_card.dart';
-import 'widgets/circular_progress_painter.dart';
-import 'services/audio_service.dart';
-import 'services/music_scanner.dart';
-import 'models/song_model.dart';
 
 
-void main() {
-  runApp(MusicApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.example.myusic.playback',
+    androidNotificationChannelName: 'Music playback',
+    androidNotificationOngoing: true,
+  );
+  runApp(const MusicApp());
 }
 
 class MusicApp extends StatelessWidget {
+  const MusicApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'MYUSIC',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        fontFamily: 'SF Pro Display',
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
+      darkTheme: ThemeData.dark(useMaterial3: true),
+      themeMode: ThemeMode.light,
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );

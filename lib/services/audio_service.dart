@@ -1,3 +1,4 @@
+import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/song_model.dart';
 import 'dart:async';
@@ -106,9 +107,19 @@ class AudioPlayerService {
       _currentSong = song;
       _currentSongController.add(_currentSong);
 
-      // Create playlist for just_audio
-      final audioSources = _playlist.map((song) =>
-          AudioSource.file(song.data)).toList();
+      // Create playlist for just_audio with metadata for notifications.
+      final audioSources = _playlist.map((song) {
+        return AudioSource.file(
+          song.data,
+          tag: MediaItem(
+            id: song.id.toString(),
+            title: song.title,
+            artist: song.artist,
+            album: song.album,
+            duration: Duration(milliseconds: song.duration),
+          ),
+        );
+      }).toList();
 
       final playlist = ConcatenatingAudioSource(children: audioSources);
 
@@ -243,8 +254,18 @@ class AudioPlayerService {
         _currentSong = _playlist[_currentIndex];
         _currentSongController.add(_currentSong);
 
-        final audioSources = _playlist.map((song) =>
-            AudioSource.file(song.data)).toList();
+        final audioSources = _playlist.map((song) {
+          return AudioSource.file(
+            song.data,
+            tag: MediaItem(
+              id: song.id.toString(),
+              title: song.title,
+              artist: song.artist,
+              album: song.album,
+              duration: Duration(milliseconds: song.duration),
+            ),
+          );
+        }).toList();
 
         final playlist = ConcatenatingAudioSource(children: audioSources);
         await _player.setAudioSource(playlist, initialIndex: _currentIndex);

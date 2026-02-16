@@ -111,7 +111,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.all(20),
+      padding: EdgeInsets.all(15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -137,19 +137,6 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
                 ),
               ),
               SizedBox(width: 10),
-              GlassButton(
-                width: 50,
-                height: 50,
-                padding: EdgeInsets.all(12),
-                onTap: () {
-                  // TODO: Implement more options menu
-                },
-                child: Icon(
-                  Icons.more_vert_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
             ],
           ),
         ],
@@ -159,9 +146,9 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: 10),
       child: GlassCard(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: TextField(
           controller: _searchController,
           onChanged: _searchSongs,
@@ -179,10 +166,10 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
 
   Widget _buildTabBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       child: GlassCard(
-        padding: EdgeInsets.all(8),
-        borderRadius: 25,
+        padding: EdgeInsets.all(1),
+        borderRadius: 15,
         child: Row(
           children: [
             Expanded(
@@ -348,12 +335,7 @@ class _LibraryScreenState extends State<LibraryScreen> with TickerProviderStateM
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatCard('Songs', stats['totalSongs'].toString(), Icons.music_note_rounded),
-          _buildStatCard('Artists', stats['totalArtists'].toString(), Icons.person_rounded),
-          _buildStatCard('Albums', stats['totalAlbums'].toString(), Icons.album_rounded),
-          _buildStatCard('Duration', stats['totalDuration'].toString(), Icons.access_time_rounded),
-        ],
+
       ),
     );
   }

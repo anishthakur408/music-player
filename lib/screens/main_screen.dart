@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import '../widgets/glass_card.dart';
+
+import '../models/song_model.dart';
 import '../services/audio_service.dart';
 import '../services/music_scanner.dart';
-import '../models/song_model.dart';
 import 'home_screen.dart';
 import 'library_screen.dart';
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
-  _MainScreenState createState() => _MainScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
-  final PageController _pageController = PageController();
 
   final AudioPlayerService _audioService = AudioPlayerService();
   final MusicScanner _musicScanner = MusicScanner();
@@ -21,58 +22,52 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   SongModel? _currentSong;
   bool _isPlaying = false;
   bool _isLoading = true;
+  bool _isFavorite = false;
 
-  late AnimationController _miniPlayerController;
-  late Animation<double> _miniPlayerAnimation;
+  Duration _currentPosition = Duration.zero;
+  Duration _totalDuration = Duration.zero;
 
   @override
   void initState() {
     super.initState();
     _initializeServices();
-    _setupMiniPlayerAnimation();
-  }
-
-  void _setupMiniPlayerAnimation() {
-    _miniPlayerController = AnimationController(
-      duration: Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _miniPlayerAnimation = CurvedAnimation(
-      parent: _miniPlayerController,
-      curve: Curves.easeInOut,
-    );
   }
 
   Future<void> _initializeServices() async {
     try {
-      // Initialize audio service
       await _audioService.init();
 
-      // Listen to audio service streams
       _audioService.currentSongStream.listen((song) {
+        if (!mounted) return;
         setState(() {
           _currentSong = song;
         });
-
-        if (song != null && _currentSong == null) {
-          _miniPlayerController.forward();
-        } else if (song == null && _currentSong != null) {
-          _miniPlayerController.reverse();
-        }
       });
 
       _audioService.isPlayingStream.listen((playing) {
+        if (!mounted) return;
         setState(() {
           _isPlaying = playing;
         });
       });
 
-      // Scan for music in background
-      _scanForMusic();
+      _audioService.positionStream.listen((position) {
+        if (!mounted) return;
+        setState(() {
+          _currentPosition = position;
+        });
+      });
 
-    } catch (e) {
-      print('Error initializing services: $e');
+      _audioService.durationStream.listen((duration) {
+        if (!mounted) return;
+        setState(() {
+          _totalDuration = duration;
+        });
+      });
+
+      await _scanForMusic();
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -81,37 +76,137 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   Future<void> _scanForMusic() async {
     try {
-      await _musicScanner.scanForMusic();
+      final songs = await _musicScanner.scanForMusic();
+      if (!mounted) return;
+      // Keep scanner cache warm for Home/Library; UI only needs loading state.
+      setState(() {
+        if (songs.isEmpty) {
+          _currentSong = null;
+        }
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
-    } catch (e) {
-      print('Error scanning music: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorSnackBar('Failed to scan music files. Please check permissions.');
     }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.red,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+  Future<void> _handlePreviousSong() async {
+    await _audioService.skipToPrevious();
+  }
+
+  Future<void> _handleNextSong() async {
+    await _audioService.skipToNext();
+  }
+
+  void _seekTo(double progress) {
+    final seconds = (_totalDuration.inSeconds * progress).round();
+    _audioService.seek(Duration(seconds: seconds));
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
+  }
+
+  Widget _buildLoadingScreen() {
+    return const Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 12),
+            Text('Scanning your music...'),
+          ],
         ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _miniPlayerController.dispose();
-    super.dispose();
+  Widget _buildMiniPlayer(BuildContext context) {
+    final song = _currentSong;
+    if (song == null) {
+      return const SizedBox.shrink();
+    }
+
+    final progress = _totalDuration.inSeconds > 0
+        ? _currentPosition.inSeconds / _totalDuration.inSeconds
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.music_note),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      song.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      song.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: _handlePreviousSong,
+                icon: const Icon(Icons.skip_previous),
+              ),
+              IconButton(
+                onPressed: () => _audioService.togglePlayPause(),
+                icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+              ),
+              IconButton(
+                onPressed: _handleNextSong,
+                icon: const Icon(Icons.skip_next),
+              ),
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _isFavorite = !_isFavorite;
+                  });
+                },
+                icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
+              ),
+            ],
+          ),
+          Slider(
+            min: 0,
+            max: 1,
+            value: progress.clamp(0.0, 1.0),
+            onChanged: _seekTo,
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_formatDuration(_currentPosition)),
+                Text(_formatDuration(_totalDuration)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -121,261 +216,31 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
 
     return Scaffold(
-      extendBody: true,
-      body: GradientBackground(
-        child: Stack(
-          children: [
-            // Main content
-            PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentIndex = index;
-                });
-              },
-              children: [
-                HomeScreen(
-                  audioService: _audioService,
-                  musicScanner: _musicScanner,
-                ),
-                LibraryScreen(
-                  audioService: _audioService,
-                  musicScanner: _musicScanner,
-                ),
-              ],
-            ),
-
-            // Mini player
-            if (_currentSong != null)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 100, // Above bottom navigation
-                child: AnimatedBuilder(
-                  animation: _miniPlayerAnimation,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      offset: Offset(
-                        0,
-                        (1 - _miniPlayerAnimation.value) * 100,
-                      ),
-                      child: Opacity(
-                        opacity: _miniPlayerAnimation.value,
-                        child: _buildMiniPlayer(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-          ],
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          HomeScreen(audioService: _audioService, musicScanner: _musicScanner),
+          LibraryScreen(audioService: _audioService, musicScanner: _musicScanner),
+        ],
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
-    );
-  }
-
-  Widget _buildLoadingScreen() {
-    return Scaffold(
-      body: GradientBackground(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              GlassCard(
-                width: 100,
-                height: 100,
-                padding: EdgeInsets.all(25),
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                  strokeWidth: 3,
-                ),
-              ),
-
-              SizedBox(height: 30),
-
-              Text(
-                'Scanning your music...',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-
-              SizedBox(height: 10),
-
-              Text(
-                'This may take a moment',
-                style: TextStyle(
-                  color: AppColors.textMuted,
-                  fontSize: 14,
-                ),
-              ),
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_currentSong != null) _buildMiniPlayer(context),
+          NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            destinations: const [
+              NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+              NavigationDestination(icon: Icon(Icons.library_music), label: 'Library'),
             ],
           ),
-        ),
+        ],
       ),
     );
-  }
-
-  Widget _buildMiniPlayer() {
-    if (_currentSong == null) return SizedBox();
-
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20),
-      child: GlassCard(
-        padding: EdgeInsets.all(12),
-        child: Row(
-          children: [
-            // Album art / Icon
-            CircularGlassContainer(
-              size: 50,
-              backgroundColor: AppColors.primary,
-              child: Icon(
-                Icons.music_note_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-
-            SizedBox(width: 15),
-
-            // Song info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _currentSong!.title,
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    _currentSong!.artist,
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(width: 15),
-
-            // Play/Pause button
-            GlassButton(
-              width: 50,
-              height: 50,
-              padding: EdgeInsets.all(12),
-              onTap: () => _audioService.togglePlayPause(),
-              child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                color: AppColors.primary,
-                size: 24,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigation() {
-    return Container(
-      margin: EdgeInsets.all(20),
-      child: GlassCard(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        borderRadius: 25,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildNavItem(
-              icon: Icons.home_rounded,
-              label: 'Home',
-              index: 0,
-            ),
-            _buildNavItem(
-              icon: Icons.library_music_rounded,
-              label: 'Library',
-              index: 1,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-  }) {
-    final isSelected = _currentIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _currentIndex = index;
-        });
-        _pageController.animateToPage(
-          index,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 16,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.2)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected
-                  ? AppColors.primary
-                  : AppColors.textMuted,
-              size: 24,
-            ),
-            if (isSelected) ...[
-              SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Extension for easy access to services from child screens
-extension MainScreenContext on BuildContext {
-  MainScreen? get mainScreen {
-    return findAncestorWidgetOfExactType<MainScreen>();
   }
 }

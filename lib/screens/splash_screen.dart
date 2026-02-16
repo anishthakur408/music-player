@@ -151,7 +151,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       children: [
                         Text(
-                          'Music Player',
+                          'vNyl',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontSize: 32,
@@ -163,7 +163,7 @@ class _SplashScreenState extends State<SplashScreen>
                         SizedBox(height: 12),
 
                         Text(
-                          'Your Music, Your Way',
+                          'Your Music Companion',
                           style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 16,
@@ -262,7 +262,7 @@ class __LoadingIndicatorState extends State<_LoadingIndicator>
 
         // Loading text
         Text(
-          'Loading your music...',
+          '',
           style: TextStyle(
             color: AppColors.textMuted,
             fontSize: 14,
@@ -340,7 +340,7 @@ class _WaveSplashScreenState extends State<WaveSplashScreen>
                 padding: EdgeInsets.all(25),
                 borderRadius: 30,
                 child: Icon(
-                  Icons.music_note_rounded,
+                  Icons.multitrack_audio_outlined,
                   size: 60,
                   color: AppColors.primary,
                 ),
@@ -349,7 +349,7 @@ class _WaveSplashScreenState extends State<WaveSplashScreen>
               SizedBox(height: 40),
 
               Text(
-                'Music Player',
+                '',
                 style: TextStyle(
                   color: AppColors.primary,
                   fontSize: 28,
