@@ -1,3 +1,5 @@
+App name is "Myusic"
+
 # myusic
 I m just trying to make a music app .
 
