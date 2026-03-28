@@ -2,6 +2,10 @@
 I m just trying to make a music app .
 
 
+This app work offiline .
+
+
+
 
 This project is a starting point for a Flutter application.
 
