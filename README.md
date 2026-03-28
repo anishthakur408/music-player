@@ -1,8 +1,7 @@
 # myusic
+I m just trying to make a music app .
 
-A new Flutter project.
 
-## Getting Started
 
 This project is a starting point for a Flutter application.
 
